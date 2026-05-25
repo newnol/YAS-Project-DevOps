@@ -136,4 +136,190 @@ class ProductServiceTest {
         when(requestBodyUriSpec.retrieve()).thenReturn(responseSpec);
         assertDoesNotThrow(() -> productService.updateProductQuantity(productQuantityPostVms));
     }
+
+    @Test
+    void testStockService_addProductIntoWarehouse_whenValid_shouldSaveAll() {
+        com.yas.inventory.repository.WarehouseRepository warehouseRepository =
+            mock(com.yas.inventory.repository.WarehouseRepository.class);
+        com.yas.inventory.repository.StockRepository stockRepository =
+            mock(com.yas.inventory.repository.StockRepository.class);
+        ProductService mockedProductService = mock(ProductService.class);
+        com.yas.inventory.service.WarehouseService warehouseService =
+            mock(com.yas.inventory.service.WarehouseService.class);
+        com.yas.inventory.service.StockHistoryService stockHistoryService =
+            mock(com.yas.inventory.service.StockHistoryService.class);
+
+        com.yas.inventory.service.StockService stockService = new com.yas.inventory.service.StockService(
+            warehouseRepository, stockRepository, mockedProductService, warehouseService, stockHistoryService);
+
+        com.yas.inventory.viewmodel.product.ProductInfoVm productInfoVm =
+            new com.yas.inventory.viewmodel.product.ProductInfoVm(1L, "Product", "SKU", true);
+        when(stockRepository.existsByWarehouseIdAndProductId(1L, 1L)).thenReturn(false);
+        when(mockedProductService.getProduct(1L)).thenReturn(productInfoVm);
+        com.yas.inventory.model.Warehouse warehouse = new com.yas.inventory.model.Warehouse();
+        warehouse.setId(1L);
+        when(warehouseRepository.findById(1L)).thenReturn(java.util.Optional.of(warehouse));
+
+        java.util.List<com.yas.inventory.viewmodel.stock.StockPostVm> postVms =
+            java.util.List.of(new com.yas.inventory.viewmodel.stock.StockPostVm(1L, 1L));
+
+        stockService.addProductIntoWarehouse(postVms);
+
+        org.mockito.Mockito.verify(stockRepository).saveAll(org.mockito.ArgumentMatchers.anyList());
+    }
+
+    @Test
+    void testStockService_addProductIntoWarehouse_whenStockAlreadyExists_shouldThrowStockExistingException() {
+        com.yas.inventory.repository.WarehouseRepository warehouseRepository =
+            mock(com.yas.inventory.repository.WarehouseRepository.class);
+        com.yas.inventory.repository.StockRepository stockRepository =
+            mock(com.yas.inventory.repository.StockRepository.class);
+        ProductService mockedProductService = mock(ProductService.class);
+        com.yas.inventory.service.WarehouseService warehouseService =
+            mock(com.yas.inventory.service.WarehouseService.class);
+        com.yas.inventory.service.StockHistoryService stockHistoryService =
+            mock(com.yas.inventory.service.StockHistoryService.class);
+
+        com.yas.inventory.service.StockService stockService = new com.yas.inventory.service.StockService(
+            warehouseRepository, stockRepository, mockedProductService, warehouseService, stockHistoryService);
+
+        when(stockRepository.existsByWarehouseIdAndProductId(1L, 1L)).thenReturn(true);
+
+        java.util.List<com.yas.inventory.viewmodel.stock.StockPostVm> postVms =
+            java.util.List.of(new com.yas.inventory.viewmodel.stock.StockPostVm(1L, 1L));
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+            com.yas.commonlibrary.exception.StockExistingException.class,
+            () -> stockService.addProductIntoWarehouse(postVms));
+    }
+
+    @Test
+    void testStockService_addProductIntoWarehouse_whenProductNotFound_shouldThrowNotFoundException() {
+        com.yas.inventory.repository.WarehouseRepository warehouseRepository =
+            mock(com.yas.inventory.repository.WarehouseRepository.class);
+        com.yas.inventory.repository.StockRepository stockRepository =
+            mock(com.yas.inventory.repository.StockRepository.class);
+        ProductService mockedProductService = mock(ProductService.class);
+        com.yas.inventory.service.WarehouseService warehouseService =
+            mock(com.yas.inventory.service.WarehouseService.class);
+        com.yas.inventory.service.StockHistoryService stockHistoryService =
+            mock(com.yas.inventory.service.StockHistoryService.class);
+
+        com.yas.inventory.service.StockService stockService = new com.yas.inventory.service.StockService(
+            warehouseRepository, stockRepository, mockedProductService, warehouseService, stockHistoryService);
+
+        when(stockRepository.existsByWarehouseIdAndProductId(1L, 1L)).thenReturn(false);
+        when(mockedProductService.getProduct(1L)).thenReturn(null);
+
+        java.util.List<com.yas.inventory.viewmodel.stock.StockPostVm> postVms =
+            java.util.List.of(new com.yas.inventory.viewmodel.stock.StockPostVm(1L, 1L));
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+            com.yas.commonlibrary.exception.NotFoundException.class,
+            () -> stockService.addProductIntoWarehouse(postVms));
+    }
+
+    @Test
+    void testStockService_addProductIntoWarehouse_whenWarehouseNotFound_shouldThrowNotFoundException() {
+        com.yas.inventory.repository.WarehouseRepository warehouseRepository =
+            mock(com.yas.inventory.repository.WarehouseRepository.class);
+        com.yas.inventory.repository.StockRepository stockRepository =
+            mock(com.yas.inventory.repository.StockRepository.class);
+        ProductService mockedProductService = mock(ProductService.class);
+        com.yas.inventory.service.WarehouseService warehouseService =
+            mock(com.yas.inventory.service.WarehouseService.class);
+        com.yas.inventory.service.StockHistoryService stockHistoryService =
+            mock(com.yas.inventory.service.StockHistoryService.class);
+
+        com.yas.inventory.service.StockService stockService = new com.yas.inventory.service.StockService(
+            warehouseRepository, stockRepository, mockedProductService, warehouseService, stockHistoryService);
+
+        when(stockRepository.existsByWarehouseIdAndProductId(1L, 1L)).thenReturn(false);
+        when(mockedProductService.getProduct(1L)).thenReturn(
+            new com.yas.inventory.viewmodel.product.ProductInfoVm(1L, "Product", "SKU", true));
+        when(warehouseRepository.findById(1L)).thenReturn(java.util.Optional.empty());
+
+        java.util.List<com.yas.inventory.viewmodel.stock.StockPostVm> postVms =
+            java.util.List.of(new com.yas.inventory.viewmodel.stock.StockPostVm(1L, 1L));
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+            com.yas.commonlibrary.exception.NotFoundException.class,
+            () -> stockService.addProductIntoWarehouse(postVms));
+    }
+
+    @Test
+    void testStockService_getStocksByWarehouseIdAndProductNameAndSku_shouldReturnStockVms() {
+        com.yas.inventory.repository.WarehouseRepository warehouseRepository =
+            mock(com.yas.inventory.repository.WarehouseRepository.class);
+        com.yas.inventory.repository.StockRepository stockRepository =
+            mock(com.yas.inventory.repository.StockRepository.class);
+        ProductService mockedProductService = mock(ProductService.class);
+        com.yas.inventory.service.WarehouseService warehouseService =
+            mock(com.yas.inventory.service.WarehouseService.class);
+        com.yas.inventory.service.StockHistoryService stockHistoryService =
+            mock(com.yas.inventory.service.StockHistoryService.class);
+
+        com.yas.inventory.service.StockService stockService = new com.yas.inventory.service.StockService(
+            warehouseRepository, stockRepository, mockedProductService, warehouseService, stockHistoryService);
+
+        java.util.List<com.yas.inventory.viewmodel.product.ProductInfoVm> products =
+            java.util.List.of(new com.yas.inventory.viewmodel.product.ProductInfoVm(1L, "Product", "SKU", true));
+
+        when(warehouseService.getProductWarehouse(1L, "name", "sku",
+            com.yas.inventory.model.enumeration.FilterExistInWhSelection.YES)).thenReturn(products);
+
+        com.yas.inventory.model.Stock stock = com.yas.inventory.model.Stock.builder()
+            .id(1L)
+            .productId(1L)
+            .quantity(10L)
+            .reservedQuantity(0L)
+            .build();
+
+        when(stockRepository.findByWarehouseIdAndProductIdIn(1L, java.util.List.of(1L)))
+            .thenReturn(java.util.List.of(stock));
+
+        java.util.List<com.yas.inventory.viewmodel.stock.StockVm> result =
+            stockService.getStocksByWarehouseIdAndProductNameAndSku(1L, "name", "sku");
+
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
+        assertEquals(1L, result.getFirst().productId());
+    }
+
+    @Test
+    void testStockService_updateProductQuantityInStock_whenNoProductQuantityPostVms_shouldNotCallUpdateProductQuantity() {
+        com.yas.inventory.repository.WarehouseRepository warehouseRepository =
+            mock(com.yas.inventory.repository.WarehouseRepository.class);
+        com.yas.inventory.repository.StockRepository stockRepository =
+            mock(com.yas.inventory.repository.StockRepository.class);
+        ProductService mockedProductService = mock(ProductService.class);
+        com.yas.inventory.service.WarehouseService warehouseService =
+            mock(com.yas.inventory.service.WarehouseService.class);
+        com.yas.inventory.service.StockHistoryService stockHistoryService =
+            mock(com.yas.inventory.service.StockHistoryService.class);
+
+        com.yas.inventory.service.StockService stockService = new com.yas.inventory.service.StockService(
+            warehouseRepository, stockRepository, mockedProductService, warehouseService, stockHistoryService);
+
+        com.yas.inventory.model.Stock stock = com.yas.inventory.model.Stock.builder()
+            .id(1L)
+            .productId(1L)
+            .quantity(10L)
+            .reservedQuantity(0L)
+            .build();
+        java.util.List<com.yas.inventory.model.Stock> stocks = java.util.List.of(stock);
+
+        com.yas.inventory.viewmodel.stock.StockQuantityVm stockQuantityVm =
+            new com.yas.inventory.viewmodel.stock.StockQuantityVm(1L, 5L, "note");
+
+        com.yas.inventory.viewmodel.stock.StockQuantityUpdateVm requestBody =
+            new com.yas.inventory.viewmodel.stock.StockQuantityUpdateVm(java.util.List.of(stockQuantityVm));
+
+        when(stockRepository.findAllById(java.util.List.of(1L))).thenReturn(stocks);
+
+        stockService.updateProductQuantityInStock(requestBody);
+
+        org.mockito.Mockito.verify(stockHistoryService).createStockHistories(stocks,
+            java.util.List.of(stockQuantityVm));
+    }
 }

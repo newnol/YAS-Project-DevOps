@@ -98,4 +98,4 @@ public class LocationService extends AbstractCircuitBreakFallbackHandler {
     private AddressVm handleAddressFallback(Throwable throwable) throws Throwable {
         return handleTypedFallback(throwable);
     }
-}
+} // nothing
